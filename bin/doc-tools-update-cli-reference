@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
     echo "usage: $0 PROJECT"
     echo
     echo "PROJECT = something like keystone, glance, or nova"
@@ -20,6 +20,9 @@ if [[ $# -ne 1 ]]; then
 fi
 
 project=$1
+
+# only used DS for trove.
+branch=${2:-"master"}
 
 # checks command exist or not
 function does_exist {
@@ -53,6 +56,8 @@ pip install --upgrade cliff-tablib
 
 if [[ $project == 'gnocchi' ]]; then
     pip install --upgrade ${project}client
+elif [[ $project == 'trove' ]]; then
+    pip install git+https://review.elasticdb.org/tesora/tesora-python-troveclient.git@$branch
 else
     pip install --upgrade python-${project}client
 fi
@@ -77,13 +82,17 @@ mkdir output
 openstack-auto-commands --output-dir output $project
 
 if [[ ! -e openstack-manuals ]]; then
-    git clone git://git.openstack.org/openstack/openstack-manuals
+    git clone https://review.elasticdb.org/tesora/tesora-openstack-manuals
+    ln -s ./tesora-openstack-manuals ./openstack-manuals
 fi
 
 cd openstack-manuals
 
 ( git remote -v  | grep -q gerrit ) || git review -s
 
+# BH:2/10/16  I could not get this to work with openstack-manuals@dev/EE-1.7. using master
+# the openstack-manuals folder structure seems different in 1.7
+# git checkout origin/$branch
 git checkout master
 git pull
 branch=update_client_$project
