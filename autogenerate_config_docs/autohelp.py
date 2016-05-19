@@ -30,6 +30,11 @@ import sys
 import jinja2
 import stevedore
 
+try:
+    from sqlalchemy import exc
+except Exception:
+    pass
+
 sys.path.insert(0, '.')
 from hooks import HOOKS  # noqa
 
@@ -42,6 +47,18 @@ EXTENSIONS = ['oslo.cache',
               'oslo.middleware',
               'oslo.policy',
               'oslo.service']
+
+_TYPE_DESCRIPTIONS = {
+    cfg.StrOpt: 'String',
+    cfg.BoolOpt: 'Boolean',
+    cfg.IntOpt: 'Integer',
+    cfg.FloatOpt: 'Floating point',
+    cfg.ListOpt: 'List',
+    cfg.DictOpt: 'Dict',
+    cfg.MultiStrOpt: 'Multi-valued',
+    cfg._ConfigFileOpt: 'List of filenames',
+    cfg._ConfigDirOpt: 'List of directory names',
+}
 
 register_re = re.compile(r'''^ +.*\.register_opts\((?P<opts>[^,)]+)'''
                          r'''(, (group=)?["'](?P<group>.*)["'])?\)''')
@@ -105,6 +122,10 @@ def import_modules(repo_location, package_name, verbose=0):
                     """
                     If a group doesn't exist, we ignore the import.
                     """
+                    if verbose >= 2:
+                        print(e)
+                    continue
+                except exc.InvalidRequestError as e:
                     if verbose >= 2:
                         print(e)
                     continue
@@ -440,9 +461,16 @@ def write_files(package_name, options, target, output_format):
                 option.help = "No help text available for this option."
             helptext = option.help.strip().replace('\n', ' ')
             helptext = ' '.join(helptext.split())
+            if option.deprecated_for_removal:
+                if not option.help.strip().startswith('DEPRECATED'):
+                    helptext = 'DEPRECATED: ' + helptext
+                if getattr(option, 'deprecated_reason', None):
+                    helptext += ' ' + option.deprecated_reason
+
+            opt_type = _TYPE_DESCRIPTIONS.get(type(option), 'Unknown')
             item = (option.dest,
                     _sanitize_default(option),
-                    "(%s) %s" % (type(option).__name__, helptext))
+                    "(%s) %s" % (opt_type, helptext))
             items.append(item)
 
         env['items'].append(items)

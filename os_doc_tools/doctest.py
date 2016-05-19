@@ -36,15 +36,12 @@ import operator
 import os
 import re
 import shutil
-import six
 import subprocess
 import sys
 import time
 
-if six.PY3:
-    from urllib import request as urllib2
-else:
-    import urllib2
+from six.moves.urllib import error as urlerr
+from six.moves.urllib import request as urlreq
 
 from lxml import etree
 from oslo_config import cfg
@@ -307,8 +304,8 @@ def verify_valid_links(doc):
             continue
 
         try:
-            urllib2.urlopen(url)
-        except urllib2.HTTPError as e:
+            urlreq.urlopen(url)
+        except urlerr.HTTPError as e:
             # Ignore some error codes:
             # 403 (Forbidden) since it often means that the user-agent
             # is wrong.
@@ -317,7 +314,7 @@ def verify_valid_links(doc):
                 e_line = node.sourceline
                 msg.append("URL %s not reachable at line %d, error %s" % (
                     url, e_line, e))
-        except urllib2.URLError as e:
+        except urlerr.URLError as e:
             e_line = node.sourceline
             msg.append("URL %s invalid at line %d, error %s" % (
                 url, e_line, e))
@@ -966,36 +963,6 @@ def build_book(book, publish_path, log_path):
             output = subprocess.check_output(
                 ["openstack-dn2osdbk", "build/xml", "build/docbook",
                  "--toplevel", "book"],
-                stderr=subprocess.STDOUT
-            )
-            out_file.write(output)
-            output = subprocess.check_output(
-                ["mvn", "generate-sources", comments, release, "-B"],
-                stderr=subprocess.STDOUT
-            )
-        # Repository: identity-api
-        elif (cfg.CONF.repo_name == "identity-api"
-              and book.endswith("v3")):
-            output = subprocess.check_output(
-                ["bash", os.path.join(SCRIPTS_DIR, "markdown-docbook.sh"),
-                 "identity-api-v3"],
-                stderr=subprocess.STDOUT
-            )
-            out_file.write(output)
-            # File gets generated at wrong directory, we need to move it
-            # around
-            if os.path.isfile('identity-api-v3.xml'):
-                os.remove('identity-api-v3.xml')
-            shutil.move("src/markdown/identity-api-v3.xml", ".")
-            output = subprocess.check_output(
-                ["mvn", "generate-sources", comments, release, "-B"],
-                stderr=subprocess.STDOUT
-            )
-        # Repository: image-api
-        elif base_book == 'image-api-v2':
-            output = subprocess.check_output(
-                ["bash", os.path.join(SCRIPTS_DIR, "markdown-docbook.sh"),
-                 "image-api-v2.0"],
                 stderr=subprocess.STDOUT
             )
             out_file.write(output)
