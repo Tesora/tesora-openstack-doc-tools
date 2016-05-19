@@ -15,7 +15,7 @@
 if [[ $# -lt 1 ]]; then
     echo "usage: $0 PROJECT"
     echo
-    echo "PROJECT = something like keystone, glance, or nova"
+    echo "PROJECT = something like openstack, nova, or neutron"
     exit 1
 fi
 
@@ -53,6 +53,9 @@ pip install --upgrade pbr
 
 # Cliff can optionally output HTML - if cliff-tablib is installed.
 pip install --upgrade cliff-tablib
+
+# OSProfiler is an OpenStack cross-project profiling library.
+pip install --upgrade osprofiler
 
 if [[ $project == 'gnocchi' ]]; then
     pip install --upgrade ${project}client
@@ -95,9 +98,10 @@ cd openstack-manuals
 # git checkout origin/$branch
 git checkout master
 git pull
-branch=update_client_$project
+branch=cli-reference
 git branch --list $branch && git branch -D $branch
 git checkout -b $branch
 mv ../output/${project}.rst "doc/cli-reference/source"
 version=$($project --version 2>&1)
-git commit -a -m "[cli-ref] Update CLI reference for python-${project}client ${version##* }"
+version=${version##*\)}
+git commit -a -m "[cli-ref] Update python-${project}client to ${version##* }"

@@ -21,9 +21,15 @@ packages. For Ubuntu install the required packages with the following command:
 
 .. code-block:: console
 
-    $ sudo apt-get install python-dev libxml2-dev libxslt1-dev libz-dev \
+    $ sudo apt-get install python-dev libxml2-dev libxslt1-dev zlib1g-dev \
                            libmysqlclient-dev libpq-dev libffi-dev \
-                           libsqlite3-dev libldap2-dev libsasl2-dev
+                           libsqlite3-dev libldap2-dev libsasl2-dev \
+                           libjpeg-dev liberasurecode-dev
+
+
+.. note:
+    * libjpeg is needed for ironic
+    * liberasurecode-dev is needed for swift
 
 The workflow is:
 
@@ -80,7 +86,7 @@ to work on another branch:
 
 .. code-block:: console
 
-    $ ./autohelp-wrapper update -b stable/liberty
+    $ ./autohelp-wrapper -b stable/liberty update
 
 .. note::
    The ``-b`` switch doesn't apply to the ``openstack-manuals`` repository

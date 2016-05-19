@@ -20,13 +20,14 @@ MANUALSREPO=$SOURCESDIR/openstack-manuals
 MAPPINGS_DIR=$MANUALSREPO/tools/autogenerate-config-flagmappings
 AUTOHELP="python $HERE/autohelp.py"
 EXTRACT_SWIFT="python $HERE/extract_swift_flags.py"
-GITBASE=git://git.openstack.org/openstack
-GITPROJ=git://git.openstack.org/openstack
+GITBASE=${GITBASE:-git://git.openstack.org/openstack}
+GITPROJ=${GITPROJ:-git://git.openstack.org/openstack}
 PROJECTS="aodh ceilometer cinder glance heat ironic keystone manila \
-            neutron nova sahara swift trove"
-MANUALS_PROJECTS="openstack-manuals oslo-incubator"
+            neutron nova sahara swift trove zaqar"
+MANUALS_PROJECTS="openstack-manuals"
 BRANCH=master
 FAST=0
+QUIET=0
 
 usage() {
     echo "Wrapper for autohelp.py"
@@ -97,11 +98,10 @@ get_project() {
 }
 
 setup_tools() {
-    (cd $SOURCESDIR/oslo-incubator && python setup.py install)
     pip install -rrequirements.txt
 }
 
-while getopts :b:g:e:v:cf opt; do
+while getopts :b:g:e:v:cfq opt; do
     case $opt in
     b)
         BRANCH=$OPTARG
@@ -117,6 +117,9 @@ while getopts :b:g:e:v:cf opt; do
         ;;
     f)
         FAST=1
+        ;;
+    q)
+        QUIET=1
         ;;
     v)
         AUTOOPT="-v"
@@ -140,8 +143,13 @@ fi
 ACTION=$1
 shift
 
+if [ $QUIET -eq 1 ]; then
+    exec 3>&1 >/dev/null
+    exec 4>&2 2>/dev/null
+fi
+
 case $ACTION in
-    update|docbook|rst|setup) ;;
+    update|docbook|rst|dump|setup) ;;
     *)
         usage
         exit 1
@@ -158,7 +166,6 @@ fi
 RELEASE=$(echo $BRANCH | sed 's,^stable.,,')
 
 if [ "$FAST" -eq 0 ] ; then
-    get_project oslo-incubator
     get_project openstack-manuals
 
     for project in $PROJECTS; do
@@ -255,6 +262,18 @@ for project in $PROJECTS; do
             $EXTRACT_SWIFT rst -m $MANUALSREPO -s $SOURCESDIR/swift
         else
             $AUTOHELP rst $project -i $SOURCESDIR/$project/$project \
+                $extra_flags $AUTOOPT
+        fi
+        ;;
+    dump)
+        if [ $QUIET -eq 1 ]; then
+            exec 1>&3
+            exec 2>&4
+        fi
+        if [ "$project" = "swift" ]; then
+            $EXTRACT_SWIFT dump -m $MANUALSREPO -s $SOURCESDIR/swift
+        else
+            $AUTOHELP dump $project -i $SOURCESDIR/$project/$project \
                 $extra_flags $AUTOOPT
         fi
         ;;
