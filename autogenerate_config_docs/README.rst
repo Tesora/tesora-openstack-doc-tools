@@ -21,13 +21,14 @@ packages. For Ubuntu install the required packages with the following command:
 
 .. code-block:: console
 
-    $ sudo apt-get install python-dev libxml2-dev libxslt1-dev zlib1g-dev \
+    $ sudo apt-get install python-dev python-pip python-virtualenv \
+                           libxml2-dev libxslt1-dev zlib1g-dev \
                            libmysqlclient-dev libpq-dev libffi-dev \
                            libsqlite3-dev libldap2-dev libsasl2-dev \
                            libjpeg-dev liberasurecode-dev
 
 
-.. note:
+.. note::
     * libjpeg is needed for ironic
     * liberasurecode-dev is needed for swift
 
@@ -100,3 +101,13 @@ Swift configuration tables are generated using the ``extract_swift_flags.py``
 script. This script doesn't use a mapping file, but organize the tables using
 the various configuration files and sections. Most of the options must be
 described manually at the moment.
+
+Generate configuration difference
+---------------------------------
+
+To generate "New, updated, and deprecated options" for each service,
+run diff_branches.py. For example:
+
+.. code-block:: console
+
+   $ ./diff_branches.py stable/liberty stable/mitaka nova
