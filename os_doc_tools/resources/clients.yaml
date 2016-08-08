@@ -10,8 +10,6 @@ cloudkitty:
     name: Rating service
 congress:
     name: Governance service
-cue:
-    name: Message Broker service
 designate:
     name: DNS service
     subcommands: complete
@@ -27,9 +25,9 @@ ironic:
 kite:
     name: A service for managing and distributing message encryption keys
 magnum:
-    name: Containers service
+    name: Container Infrastructure Management service
 manila:
-    name: Shared file systems
+    name: Shared File Systems service
 mistral:
     name: Workflow service
     subcommands: complete
@@ -40,8 +38,7 @@ murano:
 neutron:
     name: Networking service
 nova:
-    name: OpenStack Compute
-    title: Compute
+    name: Compute service
 sahara:
     name: Data Processing service
 senlin:
@@ -76,6 +73,8 @@ trove-manage:
       - db_recreate
       - db_sync
       - db_upgrade
+watcher:
+    name: Infrastructure Optimization service
 zaqar:
     name: Message service
 openstack:

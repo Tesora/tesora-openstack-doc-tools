@@ -13,9 +13,9 @@
 import time
 import urlparse
 
-from generator import items
 from scrapy.linkextractors import LinkExtractor
 from scrapy import spiders
+from sitemap.generator import items
 
 
 class SitemapSpider(spiders.CrawlSpider):
@@ -48,7 +48,9 @@ class SitemapSpider(spiders.CrawlSpider):
                 deny=[
                     r'/trunk/',
                     r'/draft/',
-                    r'/api/'
+                    r'/api/',
+                    r'/juno/',
+                    r'/icehouse/'
                 ]
             ),
             follow=True, callback='parse_item'

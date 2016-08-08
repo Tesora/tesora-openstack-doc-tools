@@ -55,6 +55,7 @@ _TYPE_DESCRIPTIONS = {
     cfg.FloatOpt: 'Floating point',
     cfg.ListOpt: 'List',
     cfg.DictOpt: 'Dict',
+    cfg.PortOpt: 'Port number',
     cfg.MultiStrOpt: 'Multi-valued',
     cfg._ConfigFileOpt: 'List of filenames',
     cfg._ConfigDirOpt: 'List of directory names',
@@ -438,6 +439,11 @@ def write_files(package_name, options, target, output_format):
             'items': [],
         }
 
+        # Skip the options that is explicitly marked as disabled,
+        # which is used for common configuration options.
+        if cat == 'disable':
+            continue
+
         if cat in category_names:
             env['nice_cat'] = category_names[cat]
         else:
@@ -459,8 +465,15 @@ def write_files(package_name, options, target, output_format):
 
             if not option.help:
                 option.help = "No help text available for this option."
-            helptext = option.help.strip().replace('\n', ' ')
+
+            helptext = option.help.strip()
+            helptext = helptext.replace('\n\n', '$sentinal$')
+            helptext = helptext.replace('\n*', '$sentinal$*')
+            helptext = helptext.replace('\n', ' ')
             helptext = ' '.join(helptext.split())
+            # TODO(johngarbutt) space matches only the current template :(
+            helptext = helptext.replace('$sentinal$', '\n\n       ')
+
             if option.deprecated_for_removal:
                 if not option.help.strip().startswith('DEPRECATED'):
                     helptext = 'DEPRECATED: ' + helptext
@@ -468,9 +481,14 @@ def write_files(package_name, options, target, output_format):
                     helptext += ' ' + option.deprecated_reason
 
             opt_type = _TYPE_DESCRIPTIONS.get(type(option), 'Unknown')
+            flags = []
+            if option.mutable:
+                flags.append(('Mutable', 'This option can be changed without'
+                              ' restarting.'))
             item = (option.dest,
                     _sanitize_default(option),
-                    "(%s) %s" % (opt_type, helptext))
+                    "(%s) %s" % (opt_type, helptext),
+                    flags)
             items.append(item)
 
         env['items'].append(items)
